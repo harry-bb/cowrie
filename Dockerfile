@@ -1,40 +1,37 @@
 # Cowrie Dockerfile by AV / MO 
 #
 # VERSION 17.06
-FROM debian:jessie-slim
-MAINTAINER AV / MO
+FROM alpine
+MAINTAINER MO
 
 # Include dist
 ADD dist/ /root/dist/
 
-# Setup apt
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
-
 # Get and install dependencies & packages
-    apt-get install -y supervisor python-pip libmpfr-dev libssl-dev libmpc-dev libffi-dev build-essential libpython-dev python2.7-minimal git python-mysqldb python-setuptools && \
+RUN apk -U add git procps py-pip mpfr-dev openssl-dev mpc1-dev libffi-dev build-base python python-dev py-mysqldb py-setuptools gmp-dev && \
+
+# Setup user
+    addgroup -g 2000 tpot && \
+    adduser -S -s /bin/bash -u 2000 -D -g 2000 tpot && \
 
 # Install cowrie from git
-    git clone https://github.com/micheloosterhof/cowrie.git /opt/cowrie && \
-    cd /opt/cowrie && \
-    pip install --upgrade cffi && \
-    pip install -U -r requirements.txt && \
+    git clone https://github.com/micheloosterhof/cowrie.git /home/tpot/cowrie/ && \
+    cd /home/tpot/cowrie && \
+    pip install --no-cache-dir --upgrade cffi && \
+    pip install --no-cache-dir -U -r requirements.txt && \
 
 # Setup user, groups and configs
-    addgroup --gid 2000 tpot && \
-    adduser --system --no-create-home --shell /bin/bash --uid 2000 --disabled-password --disabled-login --gid 2000 tpot && \
-    mkdir -p /var/run/cowrie/ /opt/cowrie/misc/ && \
-    mv /root/dist/userdb.txt /opt/cowrie/misc/userdb.txt && \
-    chown tpot:tpot /var/run/cowrie && \
-    mv /root/dist/supervisord.conf /etc/supervisor/conf.d/supervisord.conf && \
-    mv /root/dist/cowrie.cfg /opt/cowrie/ && \
+    cp /root/dist/cowrie.cfg /home/tpot/cowrie/cowrie.cfg && \
+    cp /root/dist/userdb.txt /home/tpot/cowrie/data/userdb.txt && \
+    chown tpot:tpot -R /home/tpot/* && \
 
 # Clean up
     rm -rf /root/* && \
-    apt-get purge git python-pip python-setuptools libmpfr-dev libssl-dev libmpc-dev libffi-dev build-essential libpython-dev -y && \
-    apt-get autoremove -y && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    apk del git py-pip mpfr-dev mpc1-dev libffi-dev build-base py-mysqldb gmp-dev python-dev && \
+    rm -rf /var/cache/apk/*
 
-# Start supervisor
-CMD ["/usr/bin/supervisord","-c","/etc/supervisor/supervisord.conf"]
+# Start cowrie
+ENV PYTHONPATH /home/tpot/cowrie
+WORKDIR /home/tpot/cowrie
+USER tpot
+CMD ["/usr/bin/twistd", "--nodaemon", "-y", "cowrie.tac", "--pidfile", "var/run/cowrie.pid", "cowrie"]
