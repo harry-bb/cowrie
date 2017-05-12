@@ -5,7 +5,8 @@ MAINTAINER MO
 ADD dist/ /root/dist/
 
 # Get and install dependencies & packages
-RUN apk -U add git procps py-pip mpfr-dev openssl-dev mpc1-dev libffi-dev build-base python python-dev py-mysqldb py-setuptools gmp-dev && \
+RUN apk -U upgrade && \
+    apk add git procps py-pip mpfr-dev openssl-dev mpc1-dev libffi-dev build-base python python-dev py-mysqldb py-setuptools gmp-dev && \
 
 # Setup user
     addgroup -g 2000 cowrie && \
