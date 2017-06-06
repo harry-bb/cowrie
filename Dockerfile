@@ -13,7 +13,7 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
 
 # Get and install dependencies & packages
-    apt-get install -y supervisor python-pip libmpfr-dev libssl-dev libmpc-dev libffi-dev build-essential libpython-dev python2.7-minimal git mysql-server python-mysqldb python-setuptools \
+    apt-get install -y supervisor python-pip libmpfr-dev libssl-dev libmpc-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind git mysql-server python-mysqldb python-setuptools \
 
 # Setup ewsposter
                        python-lxml python-requests && \
@@ -23,9 +23,13 @@ RUN apt-get update -y && \
     git clone https://github.com/vorband/ewsposter.git /opt/ewsposter && \
     mkdir -p /opt/ewsposter/spool /opt/ewsposter/log && \
 
+# Setup user
+    addgroup --gid 2000 cowrie && \
+    adduser --system --shell /bin/bash --uid 2000 --disabled-password --disabled-login --gid 2000 cowrie && \
+
 # Install cowrie from git
-    git clone https://github.com/micheloosterhof/cowrie.git /opt/cowrie && \
-    cd /opt/cowrie && \
+    git clone https://github.com/micheloosterhof/cowrie.git /home/cowrie/cowrie && \
+    cd /home/cowrie/cowrie && \
     pip install --upgrade cffi && \
     pip install -U -r requirements.txt && \
 
@@ -36,13 +40,10 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
 
 # Setup user, groups and configs
-    addgroup --gid 2000 tpot && \
-    adduser --system --no-create-home --shell /bin/bash --uid 2000 --disabled-password --disabled-login --gid 2000 tpot && \
-    mkdir -p /var/run/cowrie/ /opt/cowrie/misc/ && \
-    mv /root/dist/userdb.txt /opt/cowrie/misc/userdb.txt && \
-    chown tpot:tpot /var/run/cowrie && \
     mv /root/dist/supervisord.conf /etc/supervisor/conf.d/supervisord.conf && \
-    mv /root/dist/cowrie.cfg /opt/cowrie/ && \
+    mv /root/dist/cowrie.cfg /home/cowrie/cowrie/cowrie.cfg && \
+    mv /root/dist/userdb.txt /home/cowrie/cowrie/data/userdb.txt && \
+    chown cowrie:cowrie -R /home/cowrie/* && \
 
 # Setup mysql
     sed -i 's#127.0.0.1#0.0.0.0#' /etc/mysql/my.cnf && \
