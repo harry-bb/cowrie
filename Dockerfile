@@ -13,7 +13,7 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
 
 # Get and install dependencies & packages
-    apt-get install -y supervisor python-pip libmpfr-dev libssl-dev libmpc-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind git mysql-server python-mysqldb python-setuptools \
+    apt-get install -y nano supervisor python-pip libmpfr-dev libssl-dev libmpc-dev libffi-dev build-essential libpython-dev python2.7-minimal authbind git mysql-server python-mysqldb python-setuptools \
 
 # Setup ewsposter
                        python-lxml python-requests && \
